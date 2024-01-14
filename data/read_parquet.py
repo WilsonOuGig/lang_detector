@@ -7,6 +7,7 @@ file = "data/train-00007-of-00041.parquet"  # one of huggingface wiki file
 
 
 file = "parquet/en.train-00028-of-00041.parquet"  # one of huggingface wiki file
+file = "parquet/fr.train-00011-of-00017.parquet"
 
 
 

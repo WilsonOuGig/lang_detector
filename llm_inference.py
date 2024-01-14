@@ -1,72 +1,50 @@
 import torch
-from torch import tensor
 
-from llm_training import LargeLanguageModel, device
-from tokenizer import TikTokenizer
+from llm_training import LargeLanguageModel
+from tokenizer import CharTokenizer, ClassificationClassTokenizer
 
-tokenizer = TikTokenizer()
-encode = tokenizer.encode
-decode = tokenizer.decode
-vocab_size = tokenizer.vocab_size
+from time import time
 
 
-## load trained model
-model_save_to = "models/pre-train-llm"
-trained_model = LargeLanguageModel(vocab_size)
-trained_model.load_state_dict(torch.load(model_save_to))
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def generate_text(max_new_tokens):
-    # generate from the model
-    context = torch.zeros((1, 1), dtype=torch.long, device=device)
-    output = trained_model.generate(context, max_new_tokens=max_new_tokens)[0].tolist()
-    return decode(output)
-
-
-def complete_text(text, max_new_tokens, temperature=None, top_p=None):
-    context = torch.zeros((1, 1), dtype=torch.long, device=device)
-    for id in encode(text):
-        context = torch.cat((context,  tensor([[id]])), dim=1)  # (B, T+1)
-
-    output = trained_model.generate(context, max_new_tokens=max_new_tokens, temperature=temperature, top_p=top_p)[0].tolist()
-    return decode(output)
+class LanguageDetector:
+    def __init__(self):
+        model_save_to = "models/pre-train-llm"
+        model_params = torch.load(model_save_to)
+        vocab_size, _ = model_params.get('token_embedding_table.weight').shape
+        self.block_size = model_params.get('position_embedding_table.weight').shape[0]
+        lang_size =  model_params.get('lm_head.bias').shape[0]
+        self.trained_model = LargeLanguageModel(vocab_size, lang_size)
+        self.trained_model.load_state_dict(model_params)
+        self.input_tokenizer = CharTokenizer(saved_path="models")
+        self.output_tokenizer = ClassificationClassTokenizer(saved_path="models")
 
 
-def demo_temperature(temperatures):
-    new_token = 30
-    print(f"Complete text up to {new_token} tokens:")
 
-    text = "He was best known for his participation"
+    def detect(self, text:str):
+        text = text[:min(len(text), self.block_size)] # limit to context lenght
 
-    for temperature in temperatures:
-        print(" ")
-        print(f"---------------------- temperature={temperature}---------------------- ")
-        for _ in range(10):
-            print("========================================")
-            print(complete_text(text, new_token, temperature=temperature))
+        # generate from the model
+        input = torch.tensor(self.input_tokenizer.encode(text), dtype=torch.long, device=device)
+        input = input.view(1, -1)
 
+        output = self.trained_model.predict(input).tolist()
 
-def demo_top_p(top_p_list):
-    new_token = 30
-    print(f"Complete text up to {new_token} tokens:")
+        return self.output_tokenizer.decode(output[0])
 
-    text = "He was best known for his participation"
-
-    for top_p in top_p_list:
-        print(" ")
-        print(f"---------------------- top_p={top_p}---------------------- ")
-        for _ in range(10):
-            print("========================================")
-            print(complete_text(text, new_token, top_p=top_p))
 
 
 if __name__ == "__main__":
-    new_token = 30
-    # print("Generating text up to 100 tokens:")
-    # print(generate_text(new_token))
 
-    # # print("========================================")
-    # text = "He was best known for his participation"
-    # print(complete_text(text, new_token))
+    lang_detector = LanguageDetector()
 
-    # demo_temperature([1, 0.4])
-    demo_top_p([1, 0.7])
+    while True:
+        text =  input('Input: ')
+        if not text.strip():
+            continue
+
+        t1 = time()
+        lang = lang_detector.detect(text)
+
+        print(f"'{text}'  '{lang=}', time={(time() - t1) :.3f}")

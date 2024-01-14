@@ -1,70 +1,64 @@
+import json
+from os import path
+
 from utils import remove_emojis_and_eol_from_list
 
 
 class CharTokenizer:
-    def __init__(self, text):
-        # here are all the unique characters that occur in this text
-        chars = sorted(list(set(text)))
-        chars = remove_emojis_and_eol_from_list(chars)
+    saved_file_name = "tokenizer.json"
+
+    def __init__(self, text: str = None, saved_path: str = None):
+        if text is not None:
+            # here are all the unique characters that occur in this text
+            chars = sorted(list(set(text)))
+            chars = remove_emojis_and_eol_from_list(chars)
+        elif saved_path is not None:
+            chars = self.load(saved_path)
+        else:
+            raise ValueError("text or saved_path is needed to initialize CharTokenizer")
+
+        self.chars = chars
 
         stoi = {ch: i for i, ch in enumerate(chars)}
         itos = {i: ch for i, ch in enumerate(chars)}
-        self.vocab_size = len(chars) + 1 # last index is  for unknown char
+        self.vocab_size = len(chars) + 1  # last index is  for unknown char
         itos[self.vocab_size - 1] = ' '  # unknown char decoded as space, we don't use it anyway
 
-        self.encode = lambda s: [stoi.get(c, self.vocab_size -1 ) for c in s] # encoder: take a string, output a list of integers
-        self.decode = lambda l: ''.join([itos[i] for i in l]) # decoder: take a list of integers, output a string
+        self.encode = lambda s: [stoi.get(c, self.vocab_size - 1) for c in
+                                 s]  # encoder: take a string, output a list of integers
+        self.decode = lambda l: ''.join([itos[i] for i in l])  # decoder: take a list of integers, output a string
 
-# import importlib
-import tiktoken
-class TikTokenizer:
-    def __init__(self):
-        # analyze tokenzie by titoken
-        # print("tiktoken version:", importlib.metadata.version("tiktoken"))
-        tokenizer = tiktoken.get_encoding("gpt2")
+    def save_to(self, save_to_path):
+        with open(path.join(save_to_path, self.saved_file_name), 'wt') as f:
+            json.dump(self.chars, f)
 
-        self.decode = tokenizer.decode
-        self.encode = tokenizer.encode
-        self.vocab_size = tokenizer.n_vocab
+    def load(self, save_to_path):
+        with open(path.join(save_to_path, self.saved_file_name), 'rt') as f:
+            return json.load(f)
 
 
+class ClassificationClassTokenizer:
+    saved_file_name = "classes.json"
 
-import re
-class WordTokenizer:
-    def __init__(self, text):
-        # here are all the unique characters that occur in this text
-        words = re.split(r'([,.?_!"()\']|--|\s)', text)
-        words = [item.strip() for item in words if item.strip()]
-        words = sorted(list(set(words)))
-        self.vocab_size = len(words)
+    def __init__(self, classes: list = None, saved_path: str = None):
+        if classes is not None:
+            self.classes = classes
+        elif saved_path is not None:
+            self.classes = self.load(saved_path)
+        else:
+            raise ValueError("Either classes or saved_path is needed to initialize CharTokenizer")
 
-    def encode(self, text):
-        preprocessed = re.split(r'([,.?_!"()\']|--|\s)', text)
-        preprocessed = [item.strip() for item in preprocessed if item.strip()]
-        preprocessed = [item if item in self.str_to_int
-                        else "<|unk|>" for item in preprocessed]
+        self.classes2i = {cls: i for i, cls in enumerate(self.classes)}
+        self.encode = lambda cls: self.classes2i[cls]
+        self.decode = lambda i: self.classes[i]
 
-        ids = [self.str_to_int[s] for s in preprocessed]
-        return ids
+    def save_to(self, save_to_path):
+        with open(path.join(save_to_path, self.saved_file_name), 'wt') as f:
+            json.dump(self.classes, f)
 
-    def decode(self, ids):
-        text = " ".join([self.int_to_str[i] for i in ids])
-        # Replace spaces before the specified punctuations
-        text = re.sub(r'\s+([,.?!"()\'])', r'\1', text)
-        return text
+    def load(self, save_to_path):
+        with open(path.join(save_to_path, self.saved_file_name), 'rt') as f:
+            return json.load(f)
 
-
-
-
-
-# tokenizer = tiktoken.get_encoding("gpt2")
-# print(tokenizer.n_vocab)
-# print(tokenizer.encode("may this is good I"))
-# print(tokenizer.encode("I say this is good day and night"))
-# print(tokenizer.n_vocab)
-#
-# ids = [5661, 318, 922]
-# print(tokenizer.decode(ids))
-# ids = [40, 910, 428, 318, 922, 1110, 290, 1755]
-# print(tokenizer.decode(ids))
-#
+    def get_class_size(self):
+        return len(self.classes)
