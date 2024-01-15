@@ -1,8 +1,8 @@
+import time
 from os import path
 
 import torch
-import torch.nn as nn
-from torch.nn import functional as F
+import glob
 
 import network_config
 from network import LargeLanguageModel
@@ -16,7 +16,7 @@ batch_size = 16  # how many independent sequences will we process in parallel?
 max_iters = 3000
 eval_interval = 100
 learning_rate = 3e-4
-eval_iters = 20
+eval_iters = 10
 block_size = network_config.nw_config["block_size"]
 
 
@@ -58,15 +58,20 @@ def train():
 
     dataset_files = ["en.train-00028-of-00041.parquet",
                      "fr.train-00011-of-00017.parquet"]  # one of huggingface wiki file
+
+    dataset_files = glob.glob(path.join("data/parquet", "*.parquet"))
+
     text_list = {}
 
     text = ''
     limit_text = 200000  # 10000 #limit it for debug
     for file in dataset_files:
-        text = read_parquet(path.join("data/parquet", file))
+        # text = read_parquet(path.join("data/parquet", file))
+        text = read_parquet(file)
         if limit_text > 0:
             text = text[:limit_text]
-        text_list[file.split('.')[0]] = text  # dict of lang:text
+        lang = file.split('.')[0].split("/")[-1]
+        text_list[lang] = text  # dict of lang:text
 
     all_text = [t for t in text_list.values()]
     all_text = " ".join(all_text)
@@ -135,4 +140,11 @@ def train():
 
 
 if __name__ == "__main__":
+    t1 = time.time()
+
     train()
+
+    t2 = time.time()
+    t = t2-t1
+
+    print(f"training successful time={t}")

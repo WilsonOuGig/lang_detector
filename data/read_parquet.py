@@ -1,5 +1,7 @@
 import pandas as pd
 
+import glob
+import os
 
 file = "data/train-00007-of-00041.parquet"  # one of huggingface wiki file
 file = "data/train-00007-of-00041.parquet"  # one of huggingface wiki file
@@ -11,17 +13,15 @@ file = "parquet/fr.train-00011-of-00017.parquet"
 
 
 
-df = pd.read_parquet(file, engine='fastparquet')
+for file in glob.glob("parquet/*.parquet"):
+    text_file = file.replace(".parquet", ".txt")
+    if os.path.exists(text_file):
+        continue
 
-
-print(df.columns)
-print(df.head(5))
-
-
-text = " ".join(df["text"].values.tolist())
-
-with open(file.replace(".parquet", ".txt"), 'wt', encoding='utf-8') as f:
-    f.write(text)
+    df = pd.read_parquet(file, engine='fastparquet')
+    text = " ".join(df["text"].values.tolist())
+    with open(text_file, 'wt', encoding='utf-8') as f:
+        f.write(text)
 
 
 
