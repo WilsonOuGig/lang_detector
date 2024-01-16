@@ -10,7 +10,7 @@ device = 'cuda' if torch.cuda.is_available() else  (torch.device("mps") if torch
 
 class LanguageDetector:
     def __init__(self):
-        model_save_to = "models/pre-train-llm"
+        model_save_to = "models/llm-model"
         model_params = torch.load(model_save_to)
         vocab_size, _ = model_params.get('token_embedding_table.weight').shape
         self.block_size = model_params.get('position_embedding_table.weight').shape[0]

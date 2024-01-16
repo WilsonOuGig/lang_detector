@@ -5,7 +5,7 @@ from utils import remove_emojis_and_eol_from_list
 
 
 class CharTokenizer:
-    saved_file_name = "tokenizer.json"
+    saved_file_name = "tokenizer_model.json"
 
     def __init__(self, text: str = None, saved_path: str = None):
         if text is not None:
@@ -38,7 +38,7 @@ class CharTokenizer:
 
 
 class ClassificationClassTokenizer:
-    saved_file_name = "classes.json"
+    saved_file_name = "classes_model.json"
 
     def __init__(self, classes: list = None, saved_path: str = None):
         if classes is not None:

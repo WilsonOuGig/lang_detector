@@ -4,8 +4,8 @@ from os import path
 import torch
 import glob
 
-import network_config
-from network import LargeLanguageModel
+import llm_config
+from llm_network import LargeLanguageModel
 from tokenizer import CharTokenizer, ClassificationClassTokenizer
 from utils import read_parquet
 
@@ -17,7 +17,7 @@ max_iters = 3000
 eval_interval = 100
 learning_rate = 3e-4
 eval_iters = 10
-block_size = network_config.nw_config["block_size"]
+block_size = llm_config.nw_config["block_size"]
 
 
 # data loading
