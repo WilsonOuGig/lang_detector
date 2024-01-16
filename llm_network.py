@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-import network_config
+import llm_config
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -103,7 +103,7 @@ class Block(nn.Module):
 class LargeLanguageModel(nn.Module):
 
     def __init__(self, vocab_size, lang_size):
-        config = network_config.nw_config
+        config = llm_config.nw_config
         n_embd = config['n_embd']
         self.block_size = config['block_size']
         n_layer = config['n_layer']

@@ -13,7 +13,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # hyperparameters
 batch_size = 16  # how many independent sequences will we process in parallel?
-max_iters = 3000
+max_iters = 30 #3000
 eval_interval = 100
 learning_rate = 3e-4
 eval_iters = 10

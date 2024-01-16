@@ -1,16 +1,19 @@
 import torch
 
-from llm_training import LargeLanguageModel
+from lang_detector_training import LargeLanguageModel
 from tokenizer import CharTokenizer, ClassificationClassTokenizer
 
 from time import time
 
-
-device = 'cuda' if torch.cuda.is_available() else  (torch.device("mps") if torch.backends.mps.is_available() else 'cpu')
+device = 'cpu'
+if torch.cuda.is_available():
+    device = 'cuda'
+# elif torch.backends.mps.is_available():
+#     device = torch.device("mps")
 
 class LanguageDetector:
     def __init__(self):
-        model_save_to = "models/llm-model"
+        model_save_to = "models/llm_model"
         model_params = torch.load(model_save_to)
         vocab_size, _ = model_params.get('token_embedding_table.weight').shape
         self.block_size = model_params.get('position_embedding_table.weight').shape[0]
