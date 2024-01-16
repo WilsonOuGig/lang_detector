@@ -6,7 +6,7 @@ from tokenizer import CharTokenizer, ClassificationClassTokenizer
 from time import time
 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cuda' if torch.cuda.is_available() else  (torch.device("mps") if torch.backends.mps.is_available() else 'cpu')
 
 class LanguageDetector:
     def __init__(self):
