@@ -5,11 +5,9 @@ from tokenizer import CharTokenizer, ClassificationClassTokenizer
 
 from time import time
 
-device = 'cpu'
-if torch.cuda.is_available():
-    device = 'cuda'
-# elif torch.backends.mps.is_available():
-#     device = torch.device("mps")
+from utils import get_device
+
+device = get_device()
 
 class LanguageDetector:
     def __init__(self):
@@ -31,6 +29,7 @@ class LanguageDetector:
         # generate from the model
         input = torch.tensor(self.input_tokenizer.encode(text), dtype=torch.long, device=device)
         input = input.view(1, -1)
+        input = input.to(device)
 
         output = self.trained_model.predict(input).tolist()
 

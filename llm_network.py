@@ -3,8 +3,9 @@ import torch.nn as nn
 from torch.nn import functional as F
 
 import llm_config
+from utils import get_device
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = get_device()
 
 
 class Head(nn.Module):

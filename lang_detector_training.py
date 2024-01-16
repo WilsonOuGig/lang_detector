@@ -7,9 +7,9 @@ import glob
 import llm_config
 from llm_network import LargeLanguageModel
 from tokenizer import CharTokenizer, ClassificationClassTokenizer
-from utils import read_parquet
+from utils import read_parquet, get_device
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = get_device()
 
 # hyperparameters
 batch_size = 16  # how many independent sequences will we process in parallel?
