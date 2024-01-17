@@ -20,10 +20,10 @@ class Head(nn.Module):
         dropout_percent = config['dropout_percent']
 
         super().__init__()
-        self.key = nn.Linear(n_embd, head_size, bias=False)
-        self.query = nn.Linear(n_embd, head_size, bias=False)
-        self.value = nn.Linear(n_embd, head_size, bias=False)
-        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+        self.key = nn.Linear(n_embd, head_size, bias=False, device=device)
+        self.query = nn.Linear(n_embd, head_size, bias=False, device=device)
+        self.value = nn.Linear(n_embd, head_size, bias=False, device=device)
+        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size, device=device)))
 
         self.dropout = nn.Dropout(dropout_percent)
 
@@ -52,7 +52,7 @@ class MultiHeadAttention(nn.Module):
 
         super().__init__()
         self.heads = nn.ModuleList([Head(config) for _ in range(num_heads)])
-        self.proj = nn.Linear(n_embd, n_embd)
+        self.proj = nn.Linear(n_embd, n_embd, device=device)
         self.dropout = nn.Dropout(dropout_percent)
 
     def forward(self, x):
@@ -70,9 +70,9 @@ class FeedForward(nn.Module):
 
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(n_embd, 4 * n_embd),
+            nn.Linear(n_embd, 4 * n_embd, device=device),
             nn.ReLU(),
-            nn.Linear(4 * n_embd, n_embd),
+            nn.Linear(4 * n_embd, n_embd, device=device),
             nn.Dropout(dropout_percent),
         )
 
@@ -92,8 +92,8 @@ class Block(nn.Module):
         # head_size = n_embd // num_heads
         self.sa = MultiHeadAttention(config)
         self.ffwd = FeedForward(config)
-        self.ln1 = nn.LayerNorm(n_embd)
-        self.ln2 = nn.LayerNorm(n_embd)
+        self.ln1 = nn.LayerNorm(n_embd, device=device)
+        self.ln2 = nn.LayerNorm(n_embd, device=device)
 
     def forward(self, x):
         x = x + self.sa(self.ln1(x))
@@ -111,11 +111,11 @@ class LargeLanguageModel(nn.Module):
 
         super().__init__()
         # each token directly reads off the logits for the next token from a lookup table
-        self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
-        self.position_embedding_table = nn.Embedding(self.block_size, n_embd)
+        self.token_embedding_table = nn.Embedding(vocab_size, n_embd, device=device)
+        self.position_embedding_table = nn.Embedding(self.block_size, n_embd, device=device)
         self.blocks = nn.Sequential(*[Block(config) for _ in range(n_layer)])
-        self.ln_f = nn.LayerNorm(n_embd)  # final layer norm
-        self.lm_head = nn.Linear(n_embd, lang_size)
+        self.ln_f = nn.LayerNorm(n_embd, device=device)  # final layer norm
+        self.lm_head = nn.Linear(n_embd, lang_size, device=device)
 
     def forward(self, idx, targets=None):
         B, T = idx.shape
