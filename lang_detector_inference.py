@@ -21,6 +21,7 @@ class LanguageDetector:
         self.input_tokenizer = CharTokenizer(saved_path="models")
         self.output_tokenizer = ClassificationClassTokenizer(saved_path="models")
 
+        self.trained_model.to(device)
 
 
     def detect(self, text:str):
@@ -31,9 +32,11 @@ class LanguageDetector:
         input = input.view(1, -1)
         input = input.to(device)
 
-        output = self.trained_model.predict(input).tolist()
+        output, prob = self.trained_model.predict(input)
+        output = output.tolist()
+        prob = prob.tolist()
 
-        return self.output_tokenizer.decode(output[0])
+        return self.output_tokenizer.decode(output[0]), prob[0][0]
 
 
 
@@ -47,6 +50,6 @@ if __name__ == "__main__":
             continue
 
         t1 = time()
-        lang = lang_detector.detect(text)
+        lang, prob = lang_detector.detect(text)
 
-        print(f"'{text}'  '{lang=}', time={(time() - t1) :.3f}")
+        print(f">>>> {lang=}, {prob=:.2f},  time={(time() - t1) :.3f}")

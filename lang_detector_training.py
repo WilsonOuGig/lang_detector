@@ -12,7 +12,7 @@ from utils import read_parquet, get_device
 device = get_device()
 
 # hyperparameters
-batch_size = 16  # how many independent sequences will we process in parallel?
+batch_size = 160 #16  # how many independent sequences will we process in parallel?
 max_iters = 30 #3000
 eval_interval = 100
 learning_rate = 3e-4
@@ -90,6 +90,8 @@ def train():
     train_data = {}
     val_data = {}
 
+    start_time = time.time()
+
     for lang, text in text_list.items():
         lg = torch.tensor(output_tokenizer.encode(lang), dtype=torch.long)
 
@@ -114,7 +116,7 @@ def train():
                 losses = estimate_loss(m, train_data[lang], val_data[lang])
 
                 x_v, y_v = get_batch('val', train_data[lang], val_data[lang], block_size)
-                detect_lang = output_tokenizer.decode(m.predict(x_v[:1, :])[0])
+                detect_lang= output_tokenizer.decode(m.predict(x_v[:1, :])[0][0])
 
                 if lang != detect_lang and iter > 300:
                     print('stop')
@@ -132,19 +134,21 @@ def train():
             loss.backward()
             optimizer.step()
 
+    end_time = time.time()
+
     ## save trained model
     model_save_to_path = "models"
-    torch.save(model.state_dict(), path.join(model_save_to_path, "pre-train-llm"))
+    torch.save(model.state_dict(), path.join(model_save_to_path, "llm_model"))
     input_tokenizer.save_to(model_save_to_path)
     output_tokenizer.save_to(model_save_to_path)
 
+    return end_time - start_time
+
 
 if __name__ == "__main__":
-    t1 = time.time()
 
-    train()
 
-    t2 = time.time()
-    t = t2-t1
+    duration = train()
 
-    print(f"training successful time={t}")
+
+    print(f"training successful time={duration}")

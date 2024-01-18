@@ -156,5 +156,6 @@ class LargeLanguageModel(nn.Module):
         logits = logits[:, -1, :]  # becomes (B, C), only retain last token output
 
         idx_class = torch.argmax(logits, dim=1)
+        prob = torch.softmax(logits, dim=1)[:, idx_class]
 
-        return idx_class
+        return idx_class, prob
