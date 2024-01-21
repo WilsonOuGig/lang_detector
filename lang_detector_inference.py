@@ -1,13 +1,14 @@
 import torch
 
-from lang_detector_training import LargeLanguageModel
+from llm_network import LargeLanguageModel
 from tokenizer import CharTokenizer, ClassificationClassTokenizer
 
 from time import time
 
 from utils import get_device
 
-device = get_device()
+# device = get_device() # MPS:  time=12.216817140579224 seconds for 190 detection call
+device = "cpu" # time=1.9476900100708008  seconds for 190 detection call
 
 class LanguageDetector:
     def __init__(self):
@@ -22,6 +23,7 @@ class LanguageDetector:
         self.output_tokenizer = ClassificationClassTokenizer(saved_path="models")
 
         self.trained_model.to(device)
+        self.trained_model.eval()
 
 
     def detect(self, text:str):

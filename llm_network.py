@@ -3,9 +3,9 @@ import torch.nn as nn
 from torch.nn import functional as F
 
 import llm_config
-from utils import get_device
+# from utils import get_device
 
-device = get_device()
+# device = get_device()
 
 
 class Head(nn.Module):
@@ -123,7 +123,8 @@ class LargeLanguageModel(nn.Module):
 
         # idx and targets are both (B,T) tensor of integers
         tok_emb = self.token_embedding_table(idx)  # (B,T,C)
-        pos_emb = self.position_embedding_table(torch.arange(T, device=device))  # (T,C)
+
+        pos_emb = self.position_embedding_table(torch.arange(T, device=idx.device))  # (T,C) # use the same device from the input
         x = tok_emb + pos_emb  # (B,T,C)
         x = self.blocks(x)  # (B,T,C)
         x = self.ln_f(x)  # (B,T,C)

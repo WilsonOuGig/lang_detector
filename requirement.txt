@@ -9,4 +9,7 @@ tiktoken==0.5.2
 
 fastparquet==2023.10.1
 
+openpyxl==3.1.2
 
+langcodes==3.3.0
+language_data==1.1
